@@ -1,0 +1,3 @@
+[submodule "lib/RepLKNet-pytorch"]
+	path = lib/RepLKNet-pytorch
+	url = https://github.com/DingXiaoH/RepLKNet-pytorch.git
