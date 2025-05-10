@@ -1,3 +1,6 @@
 [submodule "lib/RepLKNet-pytorch"]
 	path = lib/RepLKNet-pytorch
 	url = https://github.com/DingXiaoH/RepLKNet-pytorch.git
+[submodule "lib/DeepFaceLab"]
+	path = lib/DeepFaceLab
+	url = https://github.com/iperov/DeepFaceLab.git
