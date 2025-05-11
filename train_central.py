@@ -137,8 +137,8 @@ for epoch in range(start_epoch, config['num_epochs']):
     tb_train = defaultdict(list)
     model.train()
     for index, (images, labels) in enumerate(data_loader_train):
-        if index > 10:
-            break
+        # if index > 10:
+        #     break
         images, labels = images.to(device), labels.to(device)
         # 前向
         logits = model(images)
