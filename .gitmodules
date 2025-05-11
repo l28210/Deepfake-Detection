@@ -4,3 +4,6 @@
 [submodule "lib/DeepFaceLab"]
 	path = lib/DeepFaceLab
 	url = https://github.com/iperov/DeepFaceLab.git
+[submodule "lib/Roop"]
+	path = lib/Roop
+	url = https://github.com/s0md3v/roop.git
