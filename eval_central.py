@@ -15,6 +15,7 @@ from torch.utils.tensorboard import SummaryWriter
 from model.replknet import create_RepLKNet31B
 from sklearn.metrics import precision_score, recall_score, f1_score
 from tools.eval_model import eval_model
+from model.replknet import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int, default=32,
@@ -41,3 +42,28 @@ else:
     print('error mode, please choose fed or central')
     exit()
 
+device = torch.device('cuda')
+
+if config['dataset'] == 'archive':
+    test_folder=os.path.join(config['folder_data'],'archive/test')
+    ds_test=ForgeryDataset.example_gen(test_folder)
+
+data_loader_test=DataLoader(
+    ds_test,
+    batch_size=config['batch_size'],
+    shuffle=True,
+    num_workers=config['CPUs'],
+    pin_memory=True,
+)
+
+os.environ['LARGE_KERNEL_CONV_IMPL'] = config['LARGE_KERNEL_CONV_IMPL']
+checkpoints = sorted(glob(os.path.join(log_dir, '*.pth')))
+ckpt = checkpoints[-1]
+model = RepLKNet().load_state_dict(torch.load(ckpt))
+
+metrics_dict = eval_model(model, data_loader_test, device)
+os.makedirs(os.path.join(log_dir, "eval_metrics"), exist_ok=True)
+with open(os.path.join(log_dir, "eval_metrics.json"), 'w', encoding='utf-8') as f:
+    json.dump(metrics_dict, f, ensure_ascii=False, indent=4)
+
+print('\nDone.')
