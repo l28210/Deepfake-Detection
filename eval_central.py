@@ -23,13 +23,10 @@ parser.add_argument('--batch_size', type=int, default=32,
 parser.add_argument('--log_dir', type=str, default='./logs')
 parser.add_argument('--tag', type=str, default='')
 parser.add_argument('--dataset', type=str, default='archive', choices=['archive'])
-parser.add_argument('--seed', type=int, default=666)
 parser.add_argument('--CPUs', type=int, default=16,
                     help='Number of CPU used for train.(default: 16)')
 parser.add_argument('--mod', type=str, default='central', choices=['fed', 'central'], 
                     help='fed or central')
-parser.add_argument('--clients_num', type=int, default=10,
-                    help='number of clients')
 
 
 config = vars(parser.parse_args())
