@@ -16,13 +16,18 @@ from model.replknet import create_RepLKNet31B
 from sklearn.metrics import precision_score, recall_score, f1_score
 from tools.eval_model import eval_model
 from model.replknet import *
+from glob import glob 
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--batch_size', type=int, default=32,
                     help='Batch size in each training step. (default: 32)')
 parser.add_argument('--log_dir', type=str, default='./logs')
 parser.add_argument('--tag', type=str, default='')
+parser.add_argument('--folder_data', type=str, default='/home/l/test_self/deepfake_detect/data',
+                    help='folder of dataset')
 parser.add_argument('--dataset', type=str, default='archive', choices=['archive'])
+parser.add_argument('--LARGE_KERNEL_CONV_IMPL', type=str, default='lib/RepLKNet-pytorch/cutlass/examples/19_large_depthwise_conv2d_torch_extension/',
+                    help='hight efficient implementaion of conv')
 parser.add_argument('--CPUs', type=int, default=16,
                     help='Number of CPU used for train.(default: 16)')
 parser.add_argument('--mod', type=str, default='central', choices=['fed', 'central'], 
@@ -56,7 +61,8 @@ data_loader_test=DataLoader(
 os.environ['LARGE_KERNEL_CONV_IMPL'] = config['LARGE_KERNEL_CONV_IMPL']
 checkpoints = sorted(glob(os.path.join(log_dir, '*.pth')))
 ckpt = checkpoints[-1]
-model = RepLKNet().load_state_dict(torch.load(ckpt))
+model=create_RepLKNet31B(drop_path_rate=0.3, num_classes=2).to(device)
+model.load_state_dict(torch.load(ckpt))
 
 metrics_dict = eval_model(model, data_loader_test, device)
 os.makedirs(os.path.join(log_dir, "eval_metrics"), exist_ok=True)
