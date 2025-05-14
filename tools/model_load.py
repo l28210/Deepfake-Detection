@@ -24,7 +24,8 @@ if __name__ == '__main__':
 
     os.environ['LARGE_KERNEL_CONV_IMPL'] = config['LARGE_KERNEL_CONV_IMPL']
     model = model_load('/home/l/test_self/deepfake_detect/logs_central/central_seed114514/19.pth', device)
-    img_path = '/home/l/test_self/deepfake_detect/data/archive/test/fake/0A266M95TD_mask.png'
+    model.eval()
+    img_path = '/home/l/test_self/deepfake_detect/data/archive/test/real/00189.jpg'
     img = Image.open(img_path).convert('RGB')
     rgb_tensor = transforms.ToTensor()(img)
     print(rgb_tensor.shape)
