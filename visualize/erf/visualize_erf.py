@@ -26,6 +26,8 @@ def parse_args():
     parser.add_argument('--data_path', default='/home/l/test_self/deepfake_detect/data/archive', type=str, help='dataset path')
     parser.add_argument('--save_path', default='temp.npy', type=str, help='path to save the ERF matrix (.npy file)')
     parser.add_argument('--num_images', default=50, type=int, help='num of images to use')
+    parser.add_argument('--model_path', default='/home/l/test_self/deepfake_detect/logs_central/central_seed114514/19.pth', type=str, help='path of trained model')
+
     args = parser.parse_args()
     return args
 
@@ -74,6 +76,7 @@ def main(args):
     elif args.model == 'RepLKNet-31B':
         model = RepLKNetForERF(large_kernel_sizes=[31,29,27,13], layers=[2,2,18,2], channels=[128,256,512,1024],
                     small_kernel=5, small_kernel_merged=False)
+        model.load_state_dict(torch.load(args.model_path), torch.device('cuda'))
     elif args.model == 'RepLKNet-13':
         model = RepLKNetForERF(large_kernel_sizes=[13] * 4, layers=[2,2,18,2], channels=[128,256,512,1024],
                     small_kernel=5, small_kernel_merged=False)

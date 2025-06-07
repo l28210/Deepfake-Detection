@@ -13,7 +13,7 @@ class RepLKNetForERF(RepLKNet):
                  small_kernel_merged=False):
         super().__init__(large_kernel_sizes=large_kernel_sizes, layers=layers, channels=channels,
                          drop_path_rate=0, small_kernel=small_kernel, dw_ratio=dw_ratio, ffn_ratio=ffn_ratio,
-                         in_channels=3, num_classes=1000, small_kernel_merged=small_kernel_merged)
+                         in_channels=3, num_classes=2, small_kernel_merged=small_kernel_merged)
 
     def forward(self, x):
         x = self.forward_features(x)
