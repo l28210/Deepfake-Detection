@@ -8,7 +8,7 @@ from tools.datasets.snowykitti_fed import SnowyKITTI_FED
 from tools.datasets.snowykitti_only import SnowyKITTI_ONLY
 import os
 import json
-from federation.fedavg import Fedavg
+from federation.fedprox import Fedprox
 import random
 from tools.utils import set_seed
 
@@ -19,10 +19,10 @@ parser.add_argument('--num_clients', type=int, default=10,
                     help='Number of clients. (default: 10)')
 parser.add_argument('--active_rate', type=float, default=0.5,
                     help='active rate of clients in each round. (default: 0.5)')
-parser.add_argument('--num_rounds', type=int, default=2,
-                    help='Number of rounds. (default: 5)')
-parser.add_argument('--num_epochs', type=int, default=1,
-                    help='Number of epochs. (default: 4)')
+parser.add_argument('--num_rounds', type=int, default=20,
+                    help='Number of rounds. (default: 20)')
+parser.add_argument('--num_epochs', type=int, default=2,
+                    help='Number of epochs. (default: 2)')
 parser.add_argument('--batch_size', type=int, default=8,
                     help='Batch size in each training step. (default: 8)')
 parser.add_argument('--lr', type=float, default=1e-3,
@@ -36,6 +36,7 @@ parser.add_argument('--log_dir', type=str, default='./logs')
 parser.add_argument('--tag', type=str, default='')
 parser.add_argument('--dataset', type=str, default='both', choices=['snowykitti', 'wads', 'both'])
 parser.add_argument('--seed', type=int, default=666)
+parser.add_argument('--prox_mu', type=float, default=0.01)
 
 # 是否使用分布引导的聚合机制
 parser.add_argument('--agg_strategy', action='store_true')
@@ -146,8 +147,8 @@ active_idx_list = {
     ]
 }
 
-# Fedavg方法
-federation = Fedavg(config, device, data_loader_train, data_loader_val)
+# Fedprox方法
+federation = Fedprox(config, device, data_loader_train, data_loader_val)
 
 # 全部的clients下标
 all_idx = list(range(config['num_clients']))

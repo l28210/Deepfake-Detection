@@ -1,6 +1,8 @@
 from datetime import datetime
+from collections import defaultdict
 import argparse
 import torch
+import numpy as np
 from torch.utils.data import DataLoader
 from tools.datasets.wads_fed import WADS_FED
 from tools.datasets.wads_only import WADS_ONLY
@@ -8,7 +10,9 @@ from tools.datasets.snowykitti_fed import SnowyKITTI_FED
 from tools.datasets.snowykitti_only import SnowyKITTI_ONLY
 import os
 import json
-from federation.fedavg import Fedavg
+from federation.fedDyn import FedDyn
+from federation import fedDyn
+from federation.train_func import fedDyn_train_func
 import random
 from tools.utils import set_seed
 
@@ -19,10 +23,10 @@ parser.add_argument('--num_clients', type=int, default=10,
                     help='Number of clients. (default: 10)')
 parser.add_argument('--active_rate', type=float, default=0.5,
                     help='active rate of clients in each round. (default: 0.5)')
-parser.add_argument('--num_rounds', type=int, default=2,
-                    help='Number of rounds. (default: 5)')
-parser.add_argument('--num_epochs', type=int, default=1,
-                    help='Number of epochs. (default: 4)')
+parser.add_argument('--num_rounds', type=int, default=20,
+                    help='Number of rounds. (default: 20)')
+parser.add_argument('--num_epochs', type=int, default=2,
+                    help='Number of epochs. (default: 2)')
 parser.add_argument('--batch_size', type=int, default=8,
                     help='Batch size in each training step. (default: 8)')
 parser.add_argument('--lr', type=float, default=1e-3,
@@ -36,6 +40,7 @@ parser.add_argument('--log_dir', type=str, default='./logs')
 parser.add_argument('--tag', type=str, default='')
 parser.add_argument('--dataset', type=str, default='both', choices=['snowykitti', 'wads', 'both'])
 parser.add_argument('--seed', type=int, default=666)
+parser.add_argument('--alpha_coef', type=float, default=0.000001)
 
 # 是否使用分布引导的聚合机制
 parser.add_argument('--agg_strategy', action='store_true')
@@ -146,14 +151,25 @@ active_idx_list = {
     ]
 }
 
-# Fedavg方法
-federation = Fedavg(config, device, data_loader_train, data_loader_val)
+# FedDyn方法
+federation = FedDyn(config, device, data_loader_train, data_loader_val)
 
 # 全部的clients下标
 all_idx = list(range(config['num_clients']))
 
 # 分发全局模型的参数到所有clients
 federation.distribute(all_idx)
+
+# 获取正则化系数列表
+alpha_list=federation.clients.get_data_len(all_idx)
+for ele in alpha_list:
+    ele=ele/sum(alpha_list)*len(all_idx)
+# alpha_list=alpha_list/sum(alpha_list)*len(all_idx)
+fedDyn_train_func.alpha_list=alpha_list
+
+# 初始化差异列表
+# fedDyn.diff_client_server=[(defaultdict(lambda: {name: torch.zeros_like(param) for name, param in federation.server.model.state_dict().items()})) for idx in all_idx]
+# fedDyn.diff_client_server = [defaultdict(lambda: {name: torch.zeros_like(param) for name, param in federation.server.model.state_dict().items()}) for _ in all_idx]
 
 # 按设定轮次 进行训练
 for r in range(config['num_rounds']):
@@ -178,6 +194,7 @@ for r in range(config['num_rounds']):
     print(f"Clients to be trained this round: {active_idx}")
     
     # 训练clients模型
+    
     federation.train_clients(config, active_idx, device, r)
     
     # clients模型聚合到全局模型
@@ -186,11 +203,14 @@ for r in range(config['num_rounds']):
     # 保存全局模型
     federation.save_global_model(r)
     
-    # 分发全局模型的参数到所有clients
-    federation.distribute(all_idx)
+    # # 分发全局模型的参数到所有clients
+    # federation.distribute(all_idx)
+    
+    # 分发全局模型的参数到选中的clients
+    federation.distribute(active_idx)
     
     # 测试这一轮结束后每个client的本地模型在各自训练集上的性能
-    federation.clients.test_clients_model(all_idx, r, config, device)
+    federation.clients.test_clients_model(active_idx, r, config, device)
     
     # 保存clients模型
     federation.save_clients_model(r)

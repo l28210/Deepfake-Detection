@@ -6,11 +6,14 @@ from collections import defaultdict
 from tools import losses
 from torch.utils.tensorboard import SummaryWriter
 import json
+import copy
 
-def train_fedavg(config, model, start_epoch, data_loader_train, data_loader_val, optimizer, log_dir, scheduler, device, fed_round, clients_count, active_clients_len, _):
+def train_fedprox(config, model, start_epoch, data_loader_train, data_loader_val, optimizer, log_dir, scheduler, device, fed_round, clients_count, active_clients_len, _):
     w1 = (2**config['alpha'] - 1) / 2**config['alpha']
     writer = SummaryWriter(log_dir)
     loss_epochs = []
+    
+    global_model_params = [x for x in model.parameters()]
     
     t_start = time.time()
     for epoch in range(start_epoch, start_epoch+config['num_epochs']):
@@ -28,10 +31,16 @@ def train_fedavg(config, model, start_epoch, data_loader_train, data_loader_val,
 
             l_sp = config['beta'] * l_dwt + (1 - config['beta']) * l_fft
             loss = w1 * l_sp + (1 - w1) * l_res
+            
+            # FedProx 在FedAvg基础上加的正则化项
+            proximal_term = 0.0
+            for w, w_t in zip(model.parameters(), global_model_params):
+                proximal_term += (w - w_t).norm(2)
+            loss_prox = loss + 0.5 * config['prox_mu'] * proximal_term
 
             # Backward and optimize
             optimizer.zero_grad()
-            loss.backward()
+            loss_prox.backward()
             optimizer.step()
 
             # elapsed time
@@ -52,35 +61,13 @@ def train_fedavg(config, model, start_epoch, data_loader_train, data_loader_val,
             tb_train['loss/train/Residual'].append(l_res.item())
             tb_train['loss/train/lsp'].append(l_sp.item())
             tb_train['loss/train/loss'].append(loss.item())
+            tb_train['loss/train/loss_prox'].append(loss_prox.item())
 
         loss_epoch = {}
         for key, value in tb_train.items():
             loss_epoch[key] = np.nanmean(value)
             writer.add_scalar(key, np.nanmean(value), epoch + 1)
         loss_epochs.append(loss_epoch)
-        
-        # fn_ckpt = os.path.join(log_dir, f'epoch_{(epoch + 1):04d}.pth')
-        # print(f'\nSaving {fn_ckpt:s} ...')
-        # torch.save(model.state_dict(), fn_ckpt)
-
-        # tb_val = defaultdict(list)
-        # model.eval()
-        # for index, (fid, x, _, _) in enumerate(data_loader_val):
-        #     with torch.no_grad():
-        #         x = x.to(device)
-
-        #         idx_valid, y, _ = model.forward(x)
-        #         l_dwt, l_fft = losses.sparsity_loss(y)
-
-        #         residual = (y - x) * idx_valid
-        #         l_res = residual.abs().sum() / idx_valid.sum()
-
-        #         tb_val['loss/val/DWT'].append(l_dwt.item())
-        #         tb_val['loss/val/FFT'].append(l_fft.item())
-        #         tb_val['loss/val/Residual'].append(l_res.item())
-
-        # for key, value in tb_val.items():
-        #     writer.add_scalar(key, np.nanmean(value), epoch + 1)
 
         writer.flush()
         scheduler.step()

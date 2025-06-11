@@ -2,14 +2,14 @@ from .server import Server
 from .client import ClientsAll
 from tools.models import LiSnowNet
 # 不同的联邦学习方法主要的区别是 训练过程 和 损失函数, 因此针对不同的联邦学习方法写不同的训练函数
-from .train_func.fedavg_train_func import train_fedavg
+from .train_func.fedprox_train_func import train_fedprox
 import copy
 import torch
 
 from .feder_utils import cos_similarity
 from .feder_utils import count2proportion
 
-class Fedavg():
+class Fedprox():
     def __init__(self, config, device, data_loader_train, data_loader_val, global_data_loader_val=None) -> None:
         # 建立中心服务器
         self.server = Server(config, LiSnowNet().to(device), global_data_loader_val)
@@ -19,7 +19,7 @@ class Fedavg():
             倒数第2个参数是训练方法(包括计算损失和更新模型权重)
             倒数第1个参数是 client模型是否包含 个性化模块
         '''
-        self.clients = ClientsAll(config, data_loader_train, data_loader_val, LiSnowNet, device, train_fedavg, False)
+        self.clients = ClientsAll(config, data_loader_train, data_loader_val, LiSnowNet, device, train_fedprox, False)
         # 目前训练每个client的次数
         self.clients_count = [0 for _ in range(config['num_clients'])]
     

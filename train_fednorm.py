@@ -1,17 +1,16 @@
-from datetime import datetime
 import argparse
 import torch
+import os
+import json
+import random
 from torch.utils.data import DataLoader
 from tools.datasets.wads_fed import WADS_FED
 from tools.datasets.wads_only import WADS_ONLY
 from tools.datasets.snowykitti_fed import SnowyKITTI_FED
 from tools.datasets.snowykitti_only import SnowyKITTI_ONLY
-import os
-import json
-from federation.fedavg import Fedavg
-import random
+from datetime import datetime
+from federation.fednorm import Fednorm
 from tools.utils import set_seed
-
 
 # 读取参数
 parser = argparse.ArgumentParser()
@@ -40,6 +39,7 @@ parser.add_argument('--seed', type=int, default=666)
 # 是否使用分布引导的聚合机制
 parser.add_argument('--agg_strategy', action='store_true')
 parser.add_argument('--agg_factor', type=float, default=1.0)
+
 
 parser.add_argument('--threshold', type=float, default=8e-3)
 parser.add_argument('--z_ground', type=float, default=-1.8)
@@ -146,8 +146,8 @@ active_idx_list = {
     ]
 }
 
-# Fedavg方法
-federation = Fedavg(config, device, data_loader_train, data_loader_val)
+# Fednorm方法
+federation=Fednorm(config,device,data_loader_train,data_loader_val)
 
 # 全部的clients下标
 all_idx = list(range(config['num_clients']))
@@ -158,7 +158,7 @@ federation.distribute(all_idx)
 # 按设定轮次 进行训练
 for r in range(config['num_rounds']):
     print(f"\n ***********  Federated training round {r+1}  *********** ")
-    
+
     # 设置随机数生成器的种子
     random.seed(666 + r*r)
 
@@ -178,19 +178,19 @@ for r in range(config['num_rounds']):
     print(f"Clients to be trained this round: {active_idx}")
     
     # 训练clients模型
-    federation.train_clients(config, active_idx, device, r)
-    
+    federation.train_clients(config,active_idx,device,r)
+
     # clients模型聚合到全局模型
     federation.aggregation(active_idx, agg_strategy=config['agg_strategy'], agg_factor=config['agg_factor'])
-    
+
     # 保存全局模型
     federation.save_global_model(r)
-    
+
     # 分发全局模型的参数到所有clients
     federation.distribute(all_idx)
-    
+
     # 测试这一轮结束后每个client的本地模型在各自训练集上的性能
     federation.clients.test_clients_model(all_idx, r, config, device)
-    
+
     # 保存clients模型
     federation.save_clients_model(r)
