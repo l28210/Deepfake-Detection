@@ -23,22 +23,19 @@ Deepfake-Detection
 ├── environment.yml             # Conda environment config
 ├── eval_central.py             # Centralized evaluation script
 ├── federation                  # Federated learning methods
-├── img                         # Visualization or sample images
 ├── lib                         # RepLKNet and dependencies
 ├── LICENSE
-├── model                       # Training models and saved checkpoints
+├── model                       # Training models
 ├── README.md
 ├── requirements.txt
-├── scripts                     # Training script wrappers
-├── software_engineering        # UI design components
-├── temp.npy                    # Temporary result
-├── test                        # Test utilities
-├── tools                       # Helper tools
+├── scripts                     # Training scripts
+├── software_engineering        # UI
+├── tools                       # tools
 ├── train_central.py            # Centralized training script
-├── train_fedavg.py             # FedAvg training script
-├── train_fedDyn.py             # FedDyn training script
-├── train_fednorm.py            # FedNorm training script
-├── train_fedprox.py            # FedProx training script
+├── train_fedavg.py             # FedAvg
+├── train_fedDyn.py             # FedDyn
+├── train_fednorm.py            # FedNorm
+├── train_fedprox.py            # FedProx
 └── visualize                   # ERF computation and visualization
 ```
 
