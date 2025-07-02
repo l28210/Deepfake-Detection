@@ -23,9 +23,15 @@ if __name__ == '__main__':
     device = torch.device('cuda')
 
     os.environ['LARGE_KERNEL_CONV_IMPL'] = config['LARGE_KERNEL_CONV_IMPL']
-    model = model_load('/home/l/test_self/deepfake_detect/logs_central/central_seed114514/19.pth', device)
+    # model = model_load('/home/l/test_self/deepfake_detect/logs_central/central_seed114514/19.pth', device)
+    model = model_load('/home/l/test_self/deepfake_detect/log_repeat/repeat3/13.pth', device)
+
     model.eval()
-    img_path = '/home/l/test_self/deepfake_detect/data/archive/test/real/00189.jpg'
+    # img_path = '/home/l/test_self/deepfake_detect/data/archive/test/real/00189.jpg'
+    img_path = '/home/l/test_self/deepfake_detect/data/repeat/train/fake/_cgi-bin_mmwebwx-bin_webwxgetmsgimg__&MsgID=2632950530796522917&skey=@crypt_93e51b94_c74c75ebaf926e2c29e9fa10de76d9d2&mmweb_appid=wx_webfilehelper.jpeg'
+    img_path = '/home/l/test_self/deepfake_detect/data/repeat/train/real/_cgi-bin_mmwebwx-bin_webwxgetmsgimg__&MsgID=1033383351925975812&skey=@crypt_93e51b94_c74c75ebaf926e2c29e9fa10de76d9d2&mmweb_appid=wx_webfilehelper.jpeg'
+
+
     img = Image.open(img_path).convert('RGB')
     rgb_tensor = transforms.ToTensor()(img)
     print(rgb_tensor.shape)
@@ -33,3 +39,4 @@ if __name__ == '__main__':
     print(x.shape)
     y = model(x)
     print(y)
+    

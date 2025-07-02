@@ -75,7 +75,8 @@ class ForgeryDataset(Dataset):
         else:
             return rgb_tensor, label
 
-
+class OpenForensics(Dataset):
+    pass
 
 if __name__ == '__main__':
     transform = transforms.Compose([
